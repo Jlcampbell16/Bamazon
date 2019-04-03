@@ -16,31 +16,24 @@ connection.connect(function (err) {
   displayProducts();
 });
 
-
 var productsAvail = [];
-
-
 
 //Include the ids, names, and prices of products for sale.
 function displayProducts() {
-  console.log("\nHere are all the available products:\n");
+  console.log("\nHere are all the available products:");
   connection.query("SELECT * FROM products", function (err, res) {
     if (err) throw err;
-    // console.log(res)
     for (var i = 0; i < res.length; i++) {
-      productsAvail.push(`${res[i].item_id} | ${res[i].product_name} | $${res[i].price}`); //| ${res[i].stock_quantity}
+      productsAvail.push(`${res[i].item_id} | ${res[i].product_name} | $${res[i].price}`);
     };
     console.log(productsAvail)
     run();
   });
-
 };
 
 
 //Promt questions
 function run() {
-  // connection.query("SELECT * FROM products", function (err, res) {
-  //   if (err) throw err;
   inquirer.prompt([
     {
       type: "input",
@@ -67,20 +60,19 @@ function run() {
       }
     }
   ]).then(function (res) {
-    console.log("res:", res);
     units = parseInt(res.units);
-    console.log("units: ", units);
-    
+
     connection.query("SELECT * FROM products WHERE item_id=?", [res.id], function (err, res) {
       if (err) throw err;
+
       // check stock & calculate total cost
       var currentQuantity = res[0].stock_quantity;
       var price = res[0].price;
+      var productName = res[0].product_name
+
       if (units <= currentQuantity) {
         var newQuantity = currentQuantity - units;
 
-console.log("Res:", res)
-console.log("res[0].item_id", res[0].item_id)
         connection.query("UPDATE products SET ? WHERE ?",
           [
             {
@@ -91,23 +83,22 @@ console.log("res[0].item_id", res[0].item_id)
             }
           ], function (err, res) {
             if (err) throw err;
-            console.log("if callback", res)
             var totalPrice = units * price;
+            console.log(`\nYour total cost for ${units} units of ${productName} is $${totalPrice}.`);
 
-            console.log(`\nYour total cost is $${totalPrice}.`);
             productsAvail = [];
             displayProducts();
           }
         )
       }
       else {
-        console.log (`Insufficient Quantity.\n\n`);
+        console.log(`Insufficient Quantity.\n\n`);
+
         productsAvail = [];
         displayProducts();
-        }
+      }
     })
   });
-  // });
 };
 
 
